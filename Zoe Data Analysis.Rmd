@@ -1,0 +1,167 @@
+---
+title: "Zoe Data Analysis"
+author: "ZoeClarke"
+date: "April 8, 2019"
+output: html_document
+---
+
+## Introduction
+
+Interspecific interaction plays a large role in defining the composition of ecological communities. There are different reasons for this: specific niches, mutualism between species, resource competition, as well as other fixed and random effects. Relationships such as these can be the basis of complex communities that we can identify in nature.
+
+Common garden experiments allow the fixation of certain factors that we otherwise cannot control in an observational study, and take measurements of the effects of controlled predictor variables. By analyzing multiple predictors, we can get a better idea of how significant certain species or ecological traits are in forming these communities. One such common garden is the Wisconsin Aspen (WisAsp) common garden.
+
+The WisAsp common garden was established in 2010 at the University of Wisconsin’s Arlington Agricultural Research Station (43.32°N latitude, 89.33°W longitude). Different aspen (*Populus tremuloides*) tree genets (n=328) were gathered from all across Wisconsin (latitude range: 358 km, longitude range: 186 km), propogated from rootstock, and planted in the common garden with a randomized block design. The group running the experiment measured both tree traits and qualities of the insect communities that were found on each individual tree in both 2014 (n=979) and 2015 (n=986). The goal of the study was to determine potential relationships between the traits that they measured.
+
+The study concluded that: insect communities were impacted mostly by relationships among major groups of insects (ie. aphids, ants, and free-feeders); these insect communities were also impacted by tree traits, especially tree size and foliar phenology; and timing of bud break and bud set influenced particular insect species and groups. In our project, we aim to test these findings, as well as explore different relationships that may potentially be found in this common garden.
+
+## Methods and Results
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Analysis of the timing of bud break and bud set on insepct species and functional groups.
+
+Barker et al. mentioned that the timing of bud set and especially of bud set impacted the species of insects that were present on the trees in 2014 and 2015. This may be because different types of insects thrive at different points in the growing season and therefore must rely on the trees that bud at an agreeable time for the particular insect.
+
+I will test these results by making trees of distances matrices quantifying the differences between insect communities.
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+library(ggtree)
+library(cowplot)
+
+# Load the data
+dat2014 <- read.csv("buggy-aspens/WisAsp_2014-5_DryadData_2014.csv")
+dat2015 <- read.csv("buggy-aspens/WisAsp_2014-5_DryadData_2015.csv")
+```
+
+#### 2014 data:
+
+```{r}
+summary(dat2014) # Take a look at the 2014 data
+# Rename the first column because it includes a unique character
+dat2014 <- rename(dat2014, BLK = ï..BLK)
+# Select only bud and insect data
+dat2014 <- select(dat2014, ID, FreeFeeder:Lasius_neoniger, BB2014, BS2014)
+names(dat2014)# Check to make sure I have the right columns
+# Get rid of spaces in ID using regular expressions
+dat2014$ID <- gsub("\\s", "", dat2014$ID)
+summary(dat2014) # Check the data
+```
+
+Set up the data so that distance for species can be calculated
+
+```{r}
+species2014 <- (dat2014[,c(18:31)]) # Isolate species data
+rownames(species2014) <- dat2014$ID # Assign rownames as ID
+species2014 <- tidyr::drop_na(species2014) # Drop missing values
+speciesDist2014 <- vegan::vegdist(species2014) # Calculate distance and make a tree
+speciesTree2014 <- ape::nj(speciesDist2014) # Make tree of distance matrix
+# Plot the tree for bud set
+speciesTreeSet2014 <- ggtree(speciesTree2014, layout = "rectangular") %<+% dat2014 +
+  geom_tippoint(aes(colour = BS2014), size = I(3), shape = I(18)) +
+  scale_colour_gradientn(colours = rainbow(10), na.value = "grey50", 
+                         name = "Julian date") +
+  theme(legend.position = "right")
+# Plot tree for bud break
+speciesTreeBreak2014 <- ggtree(speciesTree2014, layout = "rectangular") %<+% dat2014 +
+  geom_tippoint(aes(colour = BB2014), size = I(3), shape = I(18)) +
+  scale_colour_gradientn(colours = rainbow(10), na.value = "grey50", 
+                         name = "Julian date") +
+  theme(legend.position = "right")
+```
+
+Now look at functional groups
+
+```{r}
+groups2014 <- (dat2014[,c(2:5)]) # Isolate functional group data
+rownames(groups2014) <- dat2014$ID # Assign rownames as ID
+groupsDist2014 <- vegan::vegdist(groups2014) # Calculate distance
+groupsTree2014 <- ape::nj(groupsDist2014) # Make tree of distance matrix
+# Plot the tree for bud set
+groupsTreeSet2014 <- ggtree(groupsTree2014, layout = "rectangular") %<+% dat2014 +
+  geom_tippoint(aes(colour = BS2014), size = I(3), shape = I(18)) +
+  scale_colour_gradientn(colours = rainbow(10), na.value = "grey50", 
+                         name = "Julian date") +
+  theme(legend.position = "right")
+# Plot the tree for bud break
+groupsTreeBreak2014 <- ggtree(groupsTree2014, layout = "rectangular") %<+% dat2014 +
+  geom_tippoint(aes(colour = BB2014), size = I(3), shape = I(18)) +
+  scale_colour_gradientn(colours = rainbow(10), na.value = "grey50", 
+                         name = "Julian date") +
+  theme(legend.position = "right")
+# Plot together on grid
+plot_grid(speciesTreeSet2014, speciesTreeBreak2014, groupsTreeSet2014, 
+             groupsTreeBreak2014, ncol = 2, labels = "AUTO")
+```
+
+_Figure 1._ The similarity of insect communities to one another as plotted on tree from individual trees measured in 2014 from the Wisconsin Aspen common garden located at the Arlington Agricultural Research Station, established in 2010. Every branch tip is an individual tree (n=979), with A and B trees being formed based on the similarity in insect species communities (27 total species) and C and D trees formed based on the similarity between the composition of the four insect functional groups (Free Feeders, Leaf Modifiers, Wood Modifiers, and Ants). Insects are measured in a standardized insects per minute. A and C trees have tips coloured based on the Julian date of bud set, and B and D of bud break.
+
+#### 2015 data:
+
+```{r}
+summary(dat2015) # Take a look at the 2015 data
+# Rename the first column because it includes a unique character
+dat2015 <- rename(dat2015, BLK = ï..BLK)
+# Select only bud and insect data
+dat2015 <- select(dat2015, ID, FreeFeeder:Lasius_alienus, BB2015, BS2015)
+names(dat2015) # Check to make sure I have the right columns
+# Get rid of spaces in ID using regular expressions
+dat2015$ID <- gsub("\\s", "", dat2015$ID)
+summary(dat2015) # Check the data
+```
+
+Set up data so that species distance can be calculated
+
+```{r}
+species2015 <- (dat2015[,c(21:38)]) # Isolate species data
+rownames(species2015) <- dat2015$ID # Assign rownames as ID
+speciesDist2015 <- vegan::vegdist(species2015) # Calculate distance and make a tree
+speciesTree2015 <- ape::nj(speciesDist2015) # Make tree of distance matrix
+# Plot bud set tree
+speciesTreeSet2015 <- ggtree(speciesTree2015, layout = "rectangular") %<+% dat2015 +
+  geom_tippoint(aes(colour = BS2015), size = I(3), shape = I(18)) +
+  scale_colour_gradientn(colours = rainbow(10), na.value = "grey50", 
+                         name = "Julian date") +
+  theme(legend.position = "right")
+# Plot bud break tree
+speciesTreeBreak2015 <- ggtree(speciesTree2015, layout = "rectangular") %<+% dat2015 +
+  geom_tippoint(aes(colour = BB2015), size = I(3), shape = I(18)) +
+  scale_colour_gradientn(colours = rainbow(10), na.value = "grey50", 
+                         name = "Julian date") +
+  theme(legend.position = "right")
+```
+
+Now look at functional groups
+
+```{r}
+groups2015 <- (dat2015[,c(2:5)]) # Isolate functional group data
+rownames(groups2015) <- dat2015$ID # Assign rownames as ID
+groupsDist2015 <- vegan::vegdist(groups2015) # Calculate distance
+groupsTree2015 <- ape::nj(groupsDist2015) # Make tree of distance matrix
+# Plot the tree for bud set
+groupsTreeSet2015 <- ggtree(groupsTree2015, layout = "rectangular") %<+% dat2015 +
+  geom_tippoint(aes(colour = BS2015), size = I(3), shape = I(18)) +
+  scale_colour_gradientn(colours = rainbow(10), na.value = "grey50", 
+                         name = "Julian date") +
+  theme(legend.position = "right")
+# Plot the tree for bud break
+groupsTreeBreak2015 <- ggtree(groupsTree2015, layout = "rectangular") %<+% dat2015 +
+  geom_tippoint(aes(colour = BB2015), size = I(3), shape = I(18)) +
+  scale_colour_gradientn(colours = rainbow(10), na.value = "grey50", 
+                         name = "Julian date") +
+  theme(legend.position = "right")
+# Plot together on a grid
+plot_grid(speciesTreeSet2015, speciesTreeBreak2015, groupsTreeSet2015,
+             groupsTreeBreak2015, ncol = 2, labels = "AUTO")
+```
+
+_Figure 2._ The similarity of insect communities to one another as plotted on tree from individual trees measured in 2015 from the Wisconsin Aspen common garden located at the Arlington Agricultural Research Station, established in 2010. Every branch tip is an individual tree (n=986), with A and B trees being formed based on the similarity in insect species communities (33 total species) and C and D trees formed based on the similarity between the composition of the four insect functional groups (Free Feeders, Leaf Modifiers, Wood Modifiers, and Ants). Insects are measured in a standardized insects per minute. A and C trees have tips coloured based on the Julian date of bud set, and B and D of bud break.
+
+## Interpretation of results and discussion
+
+Because the Barker et al. (2018) paper found that the timing of bud set and bud break impacted the species composition of communities, I decided to see if insect communities with a similar species or group composition would be found on trees with similar bud set and bud break dates. However, after building trees from distance matrices for both 2014 (Figure 1) and 2015 (Figure 2) data, I found no clustering of dates for neither similar insect species (Figure 1 and 2, A and B) nor similar insect group (Figure 1 and 2, C and D) composition. This suggests that perhaps the paper's findings are much more species specific and require a closer look at trends within each species on the different trees to be able to distinguish changes between the communities.
