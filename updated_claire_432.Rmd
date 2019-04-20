@@ -1,0 +1,285 @@
+---
+title: "432 analysis -- Claire"
+author: "Claire"
+date: "April 17, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=F)
+```
+
+# Does the presence of aphids drive aspen community composition?
+
+## Introduction
+
+Aphids are often associated with tending ant species that protect them from predators and benefit from the phloem sap they leave behind. But these tending ants may also remove aphid predators, other herbivores, and other competing ants from trees. Through this, the presence of aphids can indirectly affect insect community diversity and structure. Wimp and Whitham (2001) found that when aphids were absent, species richness and arthropod abundance were significantly greater in Populus tree arthropod communities.  
+
+Here, we’ll use clustering and ordination methods to investigate whether the presence of aphids drives arthropod community composition in trembling aspen (*Populus tremuloides*) in the WisAsp common garden dataset from Barker et al. (2018). If aphids are present, ants may reduce community diversity by removing species that threaten their aphid mutualists. This could result in the aphid-containing communities having similar compositions. If this is true, communities with aphids should cluster together when visualized with distance trees and non-metric multidimensional scaling plots (NMDS). 
+
+## The analysis
+
+Load packages
+```{r}
+library(dplyr)
+library(ggplot2)
+library(ggtree)
+library(vegan)
+library(ape)
+```
+
+Import and inspect data
+```{r}
+dat14 <- read.csv("WisAsp_2014-5_DryadData_2014.csv")
+dat15 <- read.csv("WisAsp_2014-5_DryadData_2015.csv")
+```
+
+Fix the first column
+```{r}
+names(dat14)[1] <- "BLK"
+names(dat15)[1] <- "BLK"
+```
+
+## The 2014 data 
+
+### Prepare the data
+
+Make identifying info into factors
+```{r}
+summary(dat14)
+dat14 <- dat14 %>%
+  mutate(BLK = as.factor(BLK),
+         POS = as.factor(POS),
+         ID = as.factor(gsub(" ", "", ID)))
+```
+
+Keep only the species and ID. Make new column AA - true if aphids absent, false if aphids present - and then take out the aphids and ants. 
+```{r}
+spec14 <- dat14 %>%
+  select(ID, Harmandia:Lasius_neoniger) %>%
+  mutate(AA=factor(ifelse(test=(SmokeyAphids==0)&(GreenAphids==0),
+                          yes="Absent", no="Present"))) %>%
+  select(-(SmokeyAphids:GreenAphids), -Lasius_neoniger)
+
+spec14 <- as.data.frame(spec14)
+rownames(spec14) <- spec14$ID
+#summary(spec14)
+```
+
+Extract just the species
+```{r}
+pre_pre_species14 <- spec14[-(which(names(spec14) %in% c("ID", "AA")))]
+pre_species14 <- pre_pre_species14[-which(is.na(rowSums(pre_pre_species14))),] # Take out NAs
+pre_labels14 <- spec14[-which(is.na(rowSums(pre_pre_species14))),] 
+
+```
+
+I only want the rows with species present
+```{r}
+if (sum(rowSums(pre_species14)==0)>0) {
+  species14 <- pre_species14[-which(rowSums(pre_species14)==0),]
+  labels14 <- pre_labels14[-which(rowSums(pre_species14)==0),]
+} else {
+  species14 <- pre_species14
+  labels14 <- pre_labels14
+}
+# "labels" are the present species ID + species + AA
+```
+
+## Make a binary distance tree
+
+Make data binary (presence=1/absence=0)
+```{r}
+spec14_bin <- species14
+spec14_bin[spec14_bin>0] <- 1
+```
+
+Calculate binary distance
+```{r}
+spec14_bin_dist <- dist(spec14_bin, method="binary")
+```
+
+Make neighbour-joining tree
+```{r}
+spec14_bintree <- nj(spec14_bin_dist)
+
+names(labels14)
+AA14 <- labels14$AA
+label_bingroups14 <- split(spec14_bintree$tip.label, AA14)
+spec14_bintree_col <- groupOTU(spec14_bintree, label_bingroups14)
+
+bintree14 <- ggtree(spec14_bintree_col, layout="rectangular",
+       aes(colour=group)) + 
+  geom_tiplab(size=0.3) + 
+  theme(legend.position="right") + 
+  scale_colour_discrete(guides(name="Aphid presence"))
+  
+bintree14
+
+```
+
+Figure x. Neighbour-joining tree of the binary distance between arthropod community composition from aspen genotypes (n=966) in the Wisconsin Aspen common garden in 2014. Points are coloured by the presence (n=409) or absence (n=557) of aphids in their arthropod communities. 
+
+### Make a Bray-Curtis distance tree
+
+Calculate Bray-Curtis dissimilarity matrix
+```{r}
+spec14_bc_dist <- vegdist(species14, method="bray")
+```
+
+Make a neighbour-joining tree
+```{r}
+spec14_bctree <- nj(spec14_bc_dist)
+
+label_bcgroups14 <- split(spec14_bctree$tip.label, AA14)
+spec14_bctree_col <- groupOTU(spec14_bctree, label_bcgroups14)
+
+bctree14 <- ggtree(spec14_bctree_col, layout="rectangular",
+       aes(colour=group)) + 
+  geom_tiplab(size=0.3) + 
+  theme(legend.position="right") + 
+  scale_colour_discrete(guides(name="Aphid presence"))
+bctree14
+```
+
+Figure x. Neighbour-joining tree of the Bray-Curtis dissimilarity in arthropod communities between aspen genotypes (n=966) in the Wisconsin Aspen common garden in 2014. Points are coloured by the presence (n=409) or absence (n=557) of aphids in their arthropod communities. 
+
+### NMDS with Bray-Curtis distance matrix
+
+```{r}
+NMDSdat14 <- metaMDS(spec14_bc_dist, k=4, trymax = 500)
+Pdat14 <- data.frame(NMDS1=NMDSdat14$points[,1],
+                   NMDS2=NMDSdat14$points[,2],
+                   Geno=row.names(species14),
+                   AA=labels14$AA)
+dim(Pdat14)
+nmds14 <- ggplot(data=Pdat14, aes(x=NMDS1, y=NMDS2, colour=AA), alpha=I(0.6)) + 
+  geom_point(aes(colour=AA)) + 
+  theme_bw() 
+nmds14
+```
+
+Figure x. Non-metric multidimensional scaling (NMDS) plot of trembling aspen (*Populus tremuloides*) genotypes (n=328) found in the Wisconsin Aspen common garden in 2014, clustered by the Bray-Curtis dissimilarity between their arthropod communities. Points are coloured by the presence or absence of aphids in their arthropod communities. 
+
+## The 2015 data
+
+### Prepare the data
+
+Make identifying info into factors
+```{r}
+dat15 <- dat15 %>%
+  mutate(BLK = as.factor(BLK),
+         POS = as.factor(POS),
+         ID = as.factor(gsub(" ", "", ID)))
+```
+
+Keep only the species and ID, as identifiers for the species, make new column AA, then take out the aphids and ants
+```{r}
+spec15 <- dat15 %>%
+  select(ID, Harmandia:Lasius_alienus) %>%
+  mutate(AA=factor(ifelse(test=(SmokeyAphids==0)&(GreenAphids==0),
+                          yes="Absent", no="Present"))) %>%
+  select(-(SmokeyAphids:GreenAphids), -(Formica_glacialis:Lasius_alienus))
+spec15 <- as.data.frame(spec15)
+rownames(spec15) <- spec15$ID
+```
+
+Extract just the species
+```{r}
+pre_pre_species15 <- spec15[-(which(names(spec15) %in% c("ID", "AA")))]
+pre_species15 <- pre_pre_species15 # Take out NAs
+pre_labels15 <- spec15
+```
+
+I only want the rows with species present
+```{r}
+if (sum(rowSums(pre_species15)==0)>0) {
+  species15 <- pre_species15[-which(rowSums(pre_species15)==0),]
+  labels15 <- pre_labels15[-which(rowSums(pre_species15)==0),]
+} else {
+  species15 <- pre_species15
+  labels15 <- pre_labels15
+}
+# "labels" are the present species ID + species + AA
+```
+
+### Make binary distance tree 
+
+Make data binary (presence=1/absence=0)
+```{r}
+spec15_bin <- species15
+spec15_bin[spec15_bin>0] <- 1
+```
+
+Calculate binary distance
+```{r}
+spec15_bin_dist <- dist(spec15_bin, method="binary")
+```
+
+Make neighbour-joining tree
+```{r}
+spec15_bintree <- nj(spec15_bin_dist)
+
+AA15 <- labels15$AA
+label_bingroups15 <- split(spec15_bintree$tip.label, AA15)
+spec15_bintree_col <- groupOTU(spec15_bintree, label_bingroups15)
+
+bintree15 <- ggtree(spec15_bintree_col, layout="rectangular",
+       aes(colour=group)) + 
+  geom_tiplab(size=0.3) + 
+  theme(legend.position="right") + 
+  scale_colour_discrete(guides(name="Aphid presence"))
+bintree15
+```
+
+Figure x. Neighbour-joining tree of the binary distance between arthropod community composition from aspen genotypes (n=328) in the Wisconsin Aspen common garden in 2014. Points are coloured by the presence or absence of aphids in their arthropod communities. 
+
+### Make a Bray-Curtis distance tree
+
+Calculate Bray-Curtis distance
+```{r}
+spec15_bc_dist <- vegdist(species15, method="bray")
+```
+
+Make neighbour-joining tree
+```{r}
+spec15_bctree <- nj(spec15_bc_dist)
+
+label_bcgroups15 <- split(spec15_bctree$tip.label, AA15)
+spec15_bctree_col <- groupOTU(spec15_bctree, label_bcgroups15)
+
+bctree15 <- ggtree(spec15_bctree_col, layout="rectangular",
+       aes(colour=group)) + 
+  geom_tiplab(size=0.3) + 
+  theme(legend.position="right") + 
+  scale_colour_discrete(guides(name="Aphid presence"))
+bctree15
+```
+
+Figure x. Neighbour-joining tree of the Bray-Curtis dissimilarity in arthropod communities between aspen genotypes (n=328) in the Wisconsin Aspen common garden in 2015. Points are coloured by the presence or absence of aphids in their arthropod communities. 
+
+### NMDS (with Bray-Curtis distance)
+```{r}
+NMDSdat15 <- metaMDS(spec15_bc_dist, k=3, trymax = 500)
+Pdat15 <- data.frame(NMDS1=NMDSdat15$points[,1],
+                   NMDS2=NMDSdat15$points[,2],
+                   Geno=row.names(species15),
+                   AA=labels15$AA)
+nmds15 <- ggplot(data=Pdat15, aes(x=NMDS1, y=NMDS2, colour=AA), alpha=I(0.6)) + 
+  geom_point(aes(colour=AA)) + 
+  theme_bw()
+nmds15
+```
+
+Figure x. Non-metric multidimensional scaling (NMDS) plot of trembling aspen (*Populus tremuloides) genotypes (n=328) found in the Wisconsin Aspen common garden in 2015, clustered by the Bray-Curtis dissimilarity between their arthropod communities. Points are coloured by the presence or absence of aphids in their arthropod communities. 
+
+
+## Discussion
+
+Aphid presence did not seem to influence the composition of trembling aspen insect communities. We did not observe any clear separation between aspen insect communities where aphids were present or absent, using neighbour-joining trees and NMDS to visualize community structure. 
+
+These results contrast with those of Wimp and Whitham (2001), who found that the presence of aphids significantly reduced species diversity, richness, and abundance in Populus fremontii and Populus angustifolia communities. However, while both this analysis and the Wimp and Whitham (2001) paper looked at the impact of aphids on Populus insect communities, they also looked at different ant species, different aphid species, and different Populus host species. 
+
+Primarily, the Wimp and Whitham (2001) study was interested in the impacts of the aphid-tending ants Formica propinqua on insect community in the presence or absence of aphids. This species was not included in the Barker et al. (2018) study, whose data was used in this analysis. Instead, Barker et al. (2018) included the aphid-tending ant species Lasius neoniger (Schwartzberg et al. 2010), Lasius alienus (Stary 1966), and Formica glacialis (Lohman et al. 2006). In terms of aphid species, Barker et al. (2018) recorded Chaitophorus populicola and Chaitophorus stevensis, while Wimp and Whitman (2001) counted Pemphigus betae, Thecabius sp. and grouped all Chaitophorus species into one group, Chaitophorus sp. As for hosts, Barker et al. (2018) used trembling aspen (Populus tremuloides) while Wimp and Whitham (2001) used Fremont cottonwood (Populus fremontii) and narrowleaf cottonwood (Populus angustifolia) as hosts. But if biodiversity is affected by aphid-tending ants removing non-aphid species from hosts, this effect should be visible in other aphid-ant associations, though the effects may not be as strong as with Formica propinqua, which Wimp and Whitham (2000) described as very aggressive.  
+
+Another reason our results did not align could come from how Barker et al. (2018) filtered their data. The DataDryad dataset contains what they define as common insects – species or families present on more than 5% of the surveyed trees. But the rare species or families they omitted could have contained important information about how aphid presence affects communities. Of the 90 arthropod species Wimp and Whitham (2001) recorded in their census, 65 were considered rare (observed 5 times or less throughout the census) and of these 65, 45 were found only on trees without mutualists. Therefore, by removing the less common species from the dataset, we may have lost some of our power to detect how aphid presence affects biodiversity. 
