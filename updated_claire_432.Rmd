@@ -271,7 +271,7 @@ nmds15 <- ggplot(data=Pdat15, aes(x=NMDS1, y=NMDS2, colour=AA), alpha=I(0.6)) +
 nmds15
 ```
 
-Figure x. Non-metric multidimensional scaling (NMDS) plot of trembling aspen (*Populus tremuloides) genotypes (n=328) found in the Wisconsin Aspen common garden in 2015, clustered by the Bray-Curtis dissimilarity between their arthropod communities. Points are coloured by the presence or absence of aphids in their arthropod communities. 
+Figure x. Non-metric multidimensional scaling (NMDS) plot of trembling aspen (*Populus tremuloides*) genotypes (n=328) found in the Wisconsin Aspen common garden in 2015, clustered by the Bray-Curtis dissimilarity between their arthropod communities. Points are coloured by the presence or absence of aphids in their arthropod communities. 
 
 
 ## Discussion
