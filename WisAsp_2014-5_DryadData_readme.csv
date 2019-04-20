@@ -1,0 +1,75 @@
+﻿"Data from = Barker, HB, L Holeski, and RL Lindroth. In Prep. Genotypic variation in plant traits shapes herbivorous insect and ant communities on a foundation tree species. PLoS ONE (intended)",,,,,
+,,,,,
+Experimental design:,,,,,
+"The Wisconsin Aspen ""WisAsp"" (Populus tremuloides) common garden was established in 2010 with 328 genets/genotypes. The trees were planted in a completely randomized block design with four replicate blocks and a perimeter of non-experimental trees. The trees were planted with 2.5 x 2.5m spacing and 1m^2 weed mats to reduce weedy growth next to the tree’s stem. The site (Arlington Agricultural Research Station in WI, USA) has a Joy silt loam soil type and was previously used as a grass-alfalfa hayfield. We did not add any soil supplements. To help establish the newly planted trees, they were watered (approximately weekly) in the summer of 2010 and the site was routinely mowed. The garden was enclosed with a 2.4m tall electrified fence to prevent damage by deer.   ",,,,,
+Study summary:,,,,,
+"In 2014 and 2015, the aspen replicates were surveyed for tree traits (e.g., tree growth/size, bud phenology, leaf morphology, and phytochemistry) and insect communities. The insect communities were visually surveyed in mid-July on days with fine weather (25.6℃±7.1 average maximum temperature, 2.4m/s±1.2 average wind speed, sunny to partly cloudy) and standardized by the time spent surveying the tree canopy (number of insects/species/minute). We recorded every insect observed and all insect-inflicted damage (e.g., vacant leaf rolls and mines). Survey times were interrupted to collect, identify, and record insects. This data set includes all common insects (i.e., species or families that were present on more than 5% of the surveyed trees).  For full details, see: paper citation ",,,,,
+,,,,,
+missing value = NA,,,,,
+,,,,,
+Variables,Data 2014,Data 2015 ,Variable category,Explanation,Units
+BLK,x,x,Tree information,block within the experimental common garden,none
+ROW,x,x,,row within the experimental common garden,none
+POS,x,x,,position (column) within the experimental common garden,none
+GENO,x,x,,tree genotype/genet ,none
+ID,x,x,,unique tree ID (block row position),none
+Total.Time,x,x,Insect survey information,total time (minutes) spent surveying the tree canopy for insects,minutes
+FreeFeeder,x,x,Insect functional groups,"free feeding insects (e.g., caterpillars, sawflies, beetles)",number of insects / min
+LeafModifier,x,x,,"leaf modifying insects (e.g., leaf rollers, gallers, miners)",number of insects / min
+WoodModifier,x,x,,"wood modifying insects (e.g., stem and twig gallers)",number of insects / min
+Ant,x,x,,ants (Formicidae),number of insects / min
+Cecidomyiidae,x,x,Common insect families,fly family (leaf galling and rolling species),number of insects / min
+Tenthredinidae,x,x,,sawflies (both free feeding and leaf folding species),number of insects / min
+Nepticulidae,x,x,,petiole galling moth family,number of insects / min
+Gracilliaridae,x,x,,leaf mining microlepidoptera moth family,number of insects / min
+Lyonetiidae,,x,,cottonwood leaf mining moth family,number of insects / min
+Agromyzidae,x,x,,fly family (leaf mining species),number of insects / min
+Megalopodidae,,x,,beetle family (black mine beetle species),number of insects / min
+Notodontidae,x,x,,"moth family (rustylined leaftier, pale green notodontid)",number of insects / min
+Noctuidae,,x,,moth family (cottonwood dagger moth),number of insects / min
+Tortricidae,x,x,,leaf rolling moths (oblique banded leafroller),number of insects / min
+Aphididae,x,x,,aphid family,number of insects / min
+Formicidae,x,x,,ant family,number of insects / min
+Chrysomelidae,x,x,,leaf beetle family,number of insects / min
+Delphacidae,,x,,leaf hopper family,number of insects / min
+Pentatomidae,x,x,,sting bug family,number of insects / min
+Membracidae,x,x,,tree hopper family,number of insects / min
+Harmandia,x,x,"Common insect species (for more information about insect species, visit https://aspeninsects.wordpress.com/)",Harmandia sp. - leaf galling fly species,number of insects / min
+Phyllocolpa,x,x,,Phyllocolpa sp. - leaf folding sawfly species,number of insects / min
+PetioleGall,x,x,,Ecteodemia populella - petiole galling moth species,number of insects / min
+LeafEdgeMine,x,x,,Caloptilia stigmatella - leaf mining and rolling moth species,number of insects / min
+SerpMine,x,x,,Phyllocnistis populiella - serpentine leaf mining moth species,number of insects / min
+CottonwoodMine,,x,,Paraleucoptera albella - leaf mining moth species,number of insects / min
+BlotchMine,x,x,,Phyllonorycter tremuloidiella - leaf blotch mining moth species,number of insects / min
+LombardyMine,x,x,,Paraphytomyza populicola - lombardy leaf mining fly species,number of insects / min
+BlackMine,,x,,Zeugophora scutellaris - black mine beetle species,number of insects / min
+LeafCurlMidge,,x,,Prodiplosis morrisi - leaf curl midge species,number of insects / min
+CottonwoodDagger,,x,,Acronicta lepusculina - cottonwood dagger moth species,number of insects / min
+Gluphisia,x,,,Gluphisia septentrionis - pale green notodontid moth species,number of insects / min
+GreenNematus,x,,,Nematus sp. - free feeding sawfly species,number of insects / min
+RustylinedLeaftier,x,x,,Clostera albosigma - rustylined leaftier moth species,number of insects / min
+ObliqueBandedLeafRoller,x,x,,Choristoneura rosaceana - oblique-banded leafroller moth species,number of insects / min
+SmokeyAphids,x,x,,Chaitophorus populicola - smokey winged aphid species,number of insects / min
+GreenAphids,x,x,,Chaitophorus stevensis - green aphid species,number of insects / min
+Formica_glacialis,,x,,Formica glacialis - ant species,number of insects / min
+Lasius_neoniger,x,x,,Lasius neoniger - ant species,number of insects / min
+Lasius_alienus,,x,,Lasius alienus - ant species,number of insects / min
+AvgBA,x,x,Tree phenotypic traits,average of spring (before) and fall (after growing season) tree basal areas (10cm above the ground) ,cm squared
+AvgSize,x,x,,average of spring (before) and fall (after growing season) tree volumes ,cm cubed
+Growth,x,x,,"relative tree growth = ln(final tree volume) - ln(initial tree volume)   (where ""ln"" is the natural log)",cm cubed / growing season
+BAI,x,x,,basal area (10cm above the ground) increment across one growing season,cm squared / growing season
+AvgEFN,x,,,average number of extra-floral nectaries per 11 leaves,number / leaf
+SDEFN,x,,,standard deviation of extra-floral nectaries across 11 leaves,number / 11 leaves
+TotEFN,x,,,total number of extra-floral nectaries per 11 leaves,number / 11 leaves
+SLA,x,x,,specific leaf area,cm squared / g dry weight
+LA,x,x,,individual leaf area,cm squared
+BB,x,x,,date of first bud break,Julian date
+BS,x,x,,date of terminal bud set,Julian date
+GS,x,x,,length of the growing season (bud break to bud set),number of days
+CT,x,x,,foliar condensed tannins,% dry weight
+Salicortin,x,x,,foliar salicortin (a type of phenolic glycoside),% dry weight
+Tremulacin,x,x,,foliar tremulacin (a type of phenolic glycoside),% dry weight
+PG,x,x,,foliar phenolic glycosides ('salicinoids') = salicortin + tremulacin,% dry weight
+TotalDefChem,x,x,,foliar defense compounds (condensed tannins + salicortin + tremulacin),% dry weight
+CN,x,x,,foliar carbon:nitrogen ratio,none
+N,x,x,,foliar nitrogen,% dry weight
