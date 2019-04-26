@@ -1,0 +1,197 @@
+---
+title: "communityDiv - jamie"
+author: "Jamie"
+date: "April 20, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# import libraries
+library(dplyr)
+library(ggplot2)
+library(ape)
+library(ggtree)
+library(vegan)
+```
+
+```{r}
+# import data from 2014 and 2015
+myData <- read.csv('./DryadData.csv')
+myData2015 <- read.csv('./DryadData2015.csv')
+```
+
+# How does EFN density influence species diversity?
+
+### Prepare data and calcuate species diversity
+```{r}
+## categorize EFN values into 'low' (<23), 'medium' (23-34), or 'high' (>34) for all individuals
+
+    # values measured in number of EFNs per 11 leaves
+sppData <- myData
+
+sppData$EFNcat <- cut(sppData$TotEFN2014,
+                     breaks = c(-Inf, 23, 34, Inf),
+                     labels = c('Low', 'Medium', 'High'))
+
+# remove rows with NA values 
+sppData <- sppData[!is.na(sppData$EFNcat),]
+sppData <- sppData[!is.na(sppData$Phyllocolpa),]
+```
+
+```{r}
+# isolate all species (from 2014 data) 
+sppDiv <- select(sppData, Harmandia, Phyllocolpa, PetioleGall, LeafEdgeMine,
+                 SerpMine,
+                 BlotchMine,
+                 LombardyMine,
+                 Gluphisia,
+                 GreenNematus,
+                 RustylinedLeaftier,
+                 ObliqueBandedLeafRoller,
+                 SmokeyAphids,
+                 GreenAphids,
+                 Lasius_neoniger)
+
+# convert to binary (presence/absence of the species)
+sppDivB <- sppDiv
+
+sppDivB[sppDivB > 0] <- 1
+```
+
+### Investigate the relationship between EFN density and species diversity
+```{r}
+# incorporate species diversity into sppData (value is number of species observed on the individual)
+sppData$divTot <- rowSums(sppDivB)
+
+# model of the effect of total EFN number per 11 leaves (TotEFN2014) and average tree size (AvgSize2014) in species diversity (divTot)
+  # Average size included to disentangl effect of size on EFN density
+
+sppDivMod <- lm(divTot ~ TotEFN2014 * AvgSize2014, data = sppData)
+
+ggplot(data = sppData, aes(x = TotEFN2014, y = divTot)) +
+  stat_smooth(method = 'lm', colour = 'black') +
+  xlab('Total number of extrafloral nectaries (per 11 leaves)') +
+  ylab('Species diversity') +
+  ggtitle('Relationship between extrafloral nectary density and species diversity') +
+  geom_point() +
+  theme_bw()
+```
+
+Figure 1. The relationship between extrafloral nectary density (as total number per 11 leaves) and species diversity among *Populus tremuloides* individuals in the WispAsp common garden (2014). EFN density had a significant effect on species diversity (F = 78.32, p < 0.0001).
+
+
+
+
+### Construct a neighbor-joining tree 
+```{r}
+# calculate binary distance matrix and neighbor-joining tree
+sppDiv_distB <- dist(sppDivB, method = 'binary')
+
+sppDiv_tree <- nj(sppDiv_distB)
+
+# append tip labels and EFN category to tree data
+EFNs <- sppData$EFNcat
+EFNblocks <- split(sppDiv_tree$tip.label, EFNs)
+
+sppDiv_ANtree <- groupOTU(sppDiv_tree, EFNblocks)
+
+# visualize tree
+ggtree(sppDiv_ANtree, layout = 'rectangular', aes(color = group)) +
+  scale_colour_discrete(guides(name="Number of Extrafloral nectaries")) +
+  geom_tiplab(size=0.3) +
+  theme(legend.position = 'right')
+```
+
+Figure 2. A binary neighbor-joining tree of distance between insect species communities among *Populus tremuloides* individuals in the WispAsp common garden (2014). Genotypes are separated by high (red), medium (blue), and low (green) densities of extrafloral nectaries.
+
+
+### Calculate Bray-Curtis dissimilarity and NMDS, grouping by EFN density
+```{r}
+sppDiv_dist <- vegdist(sppDiv, method = 'bray')
+
+Tnmds <- metaMDS(sppDiv_dist, k=4, trymax = 400)
+
+sppDivDF <- data.frame(NMDS1 = Tnmds$points[,1], NMDS2 = Tnmds$points[,2],
+                   Individual = row.names(sppData),
+                   EFNdensity = sppData$EFNcat)
+
+ggplot(data = sppDivDF, aes(x = NMDS1, y = NMDS2, colour = EFNdensity), alpha = I(0.6)) +
+  geom_point() +
+  theme_bw()
+  
+```
+
+Figure 3. An NMDS plot of *Populus tremuloides* individuals within the WispAsp common garden (2014). Genotypes are clustered by Bray-Curtis dissimilarity and coloured by high, medium, and low densities of extrafloral nectaries.
+
+# How does EFN density influence family diversity?
+```{r}
+# prepare data (as per previous calculations)
+famData <- myData
+
+famData$EFNcat <- cut(famData$TotEFN2014,
+                       breaks = c(-Inf, 23, 34, Inf),
+                       labels = c('Low', 'Middle', 'High'))
+
+famData <- famData[!is.na(famData$EFNcat),]
+famData <- famData[!is.na(famData$Phyllocolpa),]
+```
+
+### Construct a neighbor-joining tree
+```{r}
+# isolate families - determine binary diversity
+famDiv <- select(famData, Cecidomyiidae, Tenthredinidae, Nepticulidae, Gracilliaridae,
+                  Agromyzidae,
+                  Notodontidae,
+                  Tortricidae,
+                  Aphididae,
+                  Formicidae,
+                  Chrysomelidae,
+                  Pentatomidae,
+                  Membracidae)
+
+famDivB <- famDiv
+famDivB[famDivB > 0] <- 1
+
+# distance matrix and neighbor-joining tree 
+famDiv_distB <- dist(famDivB, method = 'binary')
+
+famDiv_tree <- nj(famDiv_distB)
+
+# prepare, annotate, and visualize NJ tree
+EFNcat <- famData$EFNcat
+EFNbins <- split(famDiv_tree$tip.label, EFNcat)
+
+famDiv_ANtree <- groupOTU(famDiv_tree, EFNbins)
+
+ggtree(famDiv_ANtree, layout = 'rectangular', aes(color = group, branch.length="none")) +
+  scale_colour_discrete(guides(name="Number of Extrafloral nectaries")) +
+  geom_tiplab(size=0.5) +
+  theme(legend.position = 'right')
+```
+
+Figure 4. A binary neighbor-joining tree of distance between insect families among *Populus tremuloides* individuals in the WispAsp common garden (2014). Genotypes are separated by high (red), medium (blue), and low (green) densities of extrafloral nectaries.
+
+### For family diversity, calculate Bray-Curtis and NMDS, again grouping by EFN density
+```{r message=FALSE, warning=FALSE}
+famDiv_dist <- vegdist(famDiv, method = 'bray')
+
+Fnmds <- metaMDS(famDiv_dist, k=4, trymax = 400)
+
+famDivDF <- data.frame(NMDS1 = Fnmds$points[,1], NMDS2 = Fnmds$points[,2],
+               Individual = row.names(famData),
+               EFNdensity = famData$EFNcat)
+
+ggplot(data = famDivDF, aes(x = NMDS1, y = NMDS2, colour = EFNdensity), alpha = I(0.6)) +
+  geom_point() +
+  theme_bw()
+```
+
+Figure 5. An NMDS plot of insect family communities among *Populus tremuloides* individuals within the WispAsp common garden (2014). Gneotypes are clustered by Bray-Curtis dissimilarity and coloured by high, medium, and low densities of extrafloral nectaries.
