@@ -46,7 +46,7 @@ names(dat15)[1] <- "BLK"
 
 Make identifying info into factors
 ```{r}
-summary(dat14)
+#summary(dat14)
 dat14 <- dat14 %>%
   mutate(BLK = as.factor(BLK),
          POS = as.factor(POS),
@@ -103,7 +103,6 @@ Make neighbour-joining tree
 ```{r}
 spec14_bintree <- nj(spec14_bin_dist)
 
-names(labels14)
 AA14 <- labels14$AA
 label_bingroups14 <- split(spec14_bintree$tip.label, AA14)
 spec14_bintree_col <- groupOTU(spec14_bintree, label_bingroups14)
@@ -155,11 +154,14 @@ Pdat14 <- data.frame(NMDS1=NMDSdat14$points[,1],
 dim(Pdat14)
 nmds14 <- ggplot(data=Pdat14, aes(x=NMDS1, y=NMDS2, colour=AA), alpha=I(0.6)) + 
   geom_point(aes(colour=AA)) + 
-  theme_bw() 
+  theme_bw() +
+  theme(legend.position="right") + 
+  scale_colour_discrete(guides(name="Aphid presence"))
+  
 nmds14
 ```
 
-Figure x. Non-metric multidimensional scaling (NMDS) plot of trembling aspen (*Populus tremuloides*) genotypes (n=328) found in the Wisconsin Aspen common garden in 2014, clustered by the Bray-Curtis dissimilarity between their arthropod communities. Points are coloured by the presence or absence of aphids in their arthropod communities. 
+Figure x. Non-metric multidimensional scaling (NMDS) plot of trembling aspen (*Populus tremuloides*) individuals (n=966) found in the Wisconsin Aspen common garden in 2014, clustered by the Bray-Curtis dissimilarity between their arthropod communities. Points are coloured by the presence or absence of aphids in their arthropod communities. 
 
 ## The 2015 data
 
@@ -232,7 +234,7 @@ bintree15 <- ggtree(spec15_bintree_col, layout="rectangular",
 bintree15
 ```
 
-Figure x. Neighbour-joining tree of the binary distance between arthropod community composition from aspen genotypes (n=328) in the Wisconsin Aspen common garden in 2014. Points are coloured by the presence or absence of aphids in their arthropod communities. 
+Figure x. Neighbour-joining tree of the binary distance between arthropod community composition from aspen trees (n=986) in the Wisconsin Aspen common garden in 2015. Points are coloured by the presence (n=593) or absence (n=393) of aphids in their arthropod communities. 
 
 ### Make a Bray-Curtis distance tree
 
@@ -256,7 +258,7 @@ bctree15 <- ggtree(spec15_bctree_col, layout="rectangular",
 bctree15
 ```
 
-Figure x. Neighbour-joining tree of the Bray-Curtis dissimilarity in arthropod communities between aspen genotypes (n=328) in the Wisconsin Aspen common garden in 2015. Points are coloured by the presence or absence of aphids in their arthropod communities. 
+Figure x. Neighbour-joining tree of the Bray-Curtis dissimilarity in arthropod communities between aspen individuals (n=986) in the Wisconsin Aspen common garden in 2015. Points are coloured by the presence (n=593) or absence (n=393) of aphids in their arthropod communities. 
 
 ### NMDS (with Bray-Curtis distance)
 ```{r}
@@ -267,11 +269,13 @@ Pdat15 <- data.frame(NMDS1=NMDSdat15$points[,1],
                    AA=labels15$AA)
 nmds15 <- ggplot(data=Pdat15, aes(x=NMDS1, y=NMDS2, colour=AA), alpha=I(0.6)) + 
   geom_point(aes(colour=AA)) + 
-  theme_bw()
+  theme_bw() +
+  theme(legend.position="right") + 
+  scale_colour_discrete(guides(name="Aphid presence"))
 nmds15
 ```
 
-Figure x. Non-metric multidimensional scaling (NMDS) plot of trembling aspen (*Populus tremuloides*) genotypes (n=328) found in the Wisconsin Aspen common garden in 2015, clustered by the Bray-Curtis dissimilarity between their arthropod communities. Points are coloured by the presence or absence of aphids in their arthropod communities. 
+Figure x. Non-metric multidimensional scaling (NMDS) plot of trembling aspen (*Populus tremuloides*) individuals (n=986) found in the Wisconsin Aspen common garden in 2015, clustered by the Bray-Curtis dissimilarity between their arthropod communities. Points are coloured by the presence (n=593) or absence (n=393) of aphids in their arthropod communities. 
 
 
 ## Discussion
